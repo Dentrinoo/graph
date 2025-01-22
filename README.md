@@ -1,0 +1,1 @@
+This program, written in Python 3, calculates and visualizes the behavior of two mathematical functions (S1 and S2) for a given range of values. It outputs a table of function values and a text-based graph of S1 for systems without graphical interfaces.
