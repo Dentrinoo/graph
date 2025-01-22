@@ -1,4 +1,5 @@
 This program calculates and visualizes the behavior of two mathematical functions, 
+This program calculates and visualizes the behavior of two mathematical functions, 
 𝑆
 1
 =
