@@ -1,109 +1,146 @@
-from math import exp  # Import the exponential function from the math module
+from math import exp
+from typing import List, Tuple
 
-# Taking input values from the user for initial z, step size, and final z
-z = float(input('Enter the initial value of the variable: '))
-hz = float(input('Enter the step size for the variable: '))
-kon = float(input('Enter the final value of the variable: '))
-rkon = kon + 0.1e-10  # Slightly extend the range to include the final value due to floating-point precision
 
-# Initialize variables
-a = z  # Store the initial value of z
-s = []  # Array to store S1 values
-zed = []  # Array to store z values
-k = 0  # Counter for the number of elements in the arrays
-n = 0  # Counter for the graph plotting
-d = 0  # Flag for determining the presence of the x-axis
-s1pol = 0  # Counter for positive values of S1
-s2pol = 0  # Counter for positive values of S2
-g = 1  # Unused variable
+class FunctionAnalyzer:
+    def __init__(self, initial_z: float, step_size: float, final_z: float):
+        self.initial_z: float = initial_z
+        self.step_size: float = step_size
+        self.final_z: float = final_z
+        self.extended_final_z: float = final_z + 0.1e-10  # Extend to include final value
+        self.z_values: List[float] = []
+        self.s1_values: List[float] = []
+        self.s2_values: List[float] = []
+        self.s1_min: float = 0.0
+        self.s1_max: float = 0.0
+        self.positive_s1_count: int = 0
+        self.positive_s2_count: int = 0
 
-# Finding the maximum and minimum of S1 and calculating S1 and S2 values
-print('\nTable of function values: ')
-print('      Z           S1             S2')
-while z < rkon:  # Iterate while z is less than the extended final value
-    s1 = z**3 - 4.51*z**2 - 23.9*z + 20.1  # Calculate S1
-    s2 = exp(-z) - (z - 1)**2  # Calculate S2
-    s.append(s1)  # Append S1 value to the list
-    zed.append(z)  # Append the current z value to the list
-    
-    # Print S1 and S2 values with appropriate formatting
-    if abs(s1) >= 9999 and abs(s2) >= 9999:
-        print('{:10.3f}    {:9.2e}      {:9.2e}'.format(z, s1, s2))
-    elif abs(s1) >= 9999 and 0 <= abs(s2) <= 9999:
-        print('{:10.3f}    {:9.2e}      {:9.3f}'.format(z, s1, s2))
-    elif abs(s2) >= 9999 and 0 <= abs(s1) <= 9999:
-        print('{:10.3f}    {:9.3f}      {:9.2e}'.format(z, s1, s2))
-    elif 0 <= abs(s2) <= 9999 and 0 <= abs(s1) <= 9999:
-        print('{:10.3f}    {:9.3f}      {:9.3f}'.format(z, s1, s2))
+    def calculate_functions(self) -> None:
+        """
+        Calculate S1 and S2 for each z and store the results.
+        """
+        z = self.initial_z
+        while z < self.extended_final_z:
+            s1 = self.calculate_s1(z)
+            s2 = self.calculate_s2(z)
+            self.z_values.append(z)
+            self.s1_values.append(s1)
+            self.s2_values.append(s2)
+            z += self.step_size
 
-    # Determine the minimum and maximum of S1
-    if a == z:
-        s1min = s1  # Initialize s1min with the first S1 value
-        s1max = s1  # Initialize s1max with the first S1 value
-    elif s1min > s1:
-        s1min = s1  # Update s1min if the current S1 is smaller
-    elif s1max < s1:
-        s1max = s1  # Update s1max if the current S1 is larger
+    @staticmethod
+    def calculate_s1(z: float) -> float:
+        """
+        Calculate S1 based on z.
+        """
+        return z**3 - 4.51 * z**2 - 23.9 * z + 20.1
 
-    # Count positive values of S1 and S2
-    if s1 > 0:
-        s1pol += 1
-    if s2 > 0:
-        s2pol += 1
+    @staticmethod
+    def calculate_s2(z: float) -> float:
+        """
+        Calculate S2 based on z.
+        """
+        return exp(-z) - (z - 1)**2
 
-    k += 1  # Increment the element counter
-    z += hz  # Increment z by the step size
+    def print_table(self) -> None:
+        """
+        Print the table of z, S1, and S2 values with appropriate formatting.
+        """
+        print('\nTable of Function Values:')
+        print('      Z           S1             S2')
+        for z, s1, s2 in zip(self.z_values, self.s1_values, self.s2_values):
+            if abs(s1) >= 9999 and abs(s2) >= 9999:
+                print(f'{z:10.3f}    {s1:9.2e}      {s2:9.2e}')
+            elif abs(s1) >= 9999 and 0 <= abs(s2) <= 9999:
+                print(f'{z:10.3f}    {s1:9.2e}      {s2:9.3f}')
+            elif abs(s2) >= 9999 and 0 <= abs(s1) <= 9999:
+                print(f'{z:10.3f}    {s1:9.3f}      {s2:9.2e}')
+            else:
+                print(f'{z:10.3f}    {s1:9.3f}      {s2:9.3f}')
 
-# Print counts of positive S1 and S2 values
-print('\nNumber of positive elements in function S1: ', s1pol)
-print('Number of positive elements in function S2: ', s2pol)
+    def count_positive_values(self) -> None:
+        """
+        Count the number of positive values in S1 and S2.
+        """
+        self.positive_s1_count = sum(1 for s1 in self.s1_values if s1 > 0)
+        self.positive_s2_count = sum(1 for s2 in self.s2_values if s2 > 0)
 
-# Calculate the position of the z-axis for the graph
-print()
-ox = (-s1min) / (s1max - s1min) * 65  # Scale the axis position to 65 columns
-ox = round(ox)  # Round to the nearest integer
-print()
+    def find_s1_min_max(self) -> None:
+        """
+        Find the minimum and maximum values of S1.
+        """
+        if not self.s1_values:
+            self.s1_min = 0.0
+            self.s1_max = 0.0
+        else:
+            self.s1_min = min(self.s1_values)
+            self.s1_max = max(self.s1_values)
 
-# Check if the x-axis crosses the graph (S1 has positive and negative values)
-if s1max > 0 and s1min < 0:
-    d = 1  # Flag indicating the presence of the x-axis
+    def print_positive_counts(self) -> None:
+        """
+        Print the counts of positive S1 and S2 values.
+        """
+        print('\nNumber of Positive Elements in Function S1:', self.positive_s1_count)
+        print('Number of Positive Elements in Function S2:', self.positive_s2_count)
 
-# Print the graph title
-print('Graph of function S1:')
-print()
+    def plot_graph(self) -> None:
+        """
+        Plot the graph of S1 with the x-axis.
+        """
+        if self.s1_max == self.s1_min:
+            print("\nCannot plot graph because S1 has a constant value.")
+            return
 
-# Plot the graph of S1
-while n < k:  # Iterate through the calculated values
-    m = (s[n] - s1min) / (s1max - s1min) * 65  # Scale S1 values to 65 columns
-    m = int(m)  # Convert to an integer for positioning
-    r = 0  # Position counter
-    t = 0  # Tracker for the number of printed elements in the row
+        graph_width = 65
+        axis_position = round((-self.s1_min) / (self.s1_max - self.s1_min) * graph_width)
+        has_x_axis = self.s1_max > 0 and self.s1_min < 0
 
-    if ox == m:
-        t += 1  # Adjust if the axis overlaps with the graph point
+        print('\nGraph of Function S1:\n')
 
-    print('{:9.3f}'.format(zed[n]), end='')  # Print the current z value
-    print(' ', end='')  # Add space before the graph
+        for z, s1 in zip(self.z_values, self.s1_values):
+            scaled_position = int((s1 - self.s1_min) / (self.s1_max - self.s1_min) * graph_width)
+            line = f'{z:9.3f} '
 
-    while True:  # Loop to plot points
-        if r == m:  # Plot the graph point
-            print('*', end='')
-            t += 1
-            r += 1
-            if d == 0:  # Adjust for the absence of the axis
-                t += 1
-            continue
-        if r == ox and d == 1:  # Plot the x-axis
-            print('|', end='')
-            t += 1
-            r += 1
-            continue
+            for i in range(graph_width + 1):
+                if i == scaled_position and i == axis_position and has_x_axis:
+                    line += '+'  # Intersection point
+                elif i == scaled_position:
+                    line += '*'  # S1 point
+                elif i == axis_position and has_x_axis:
+                    line += '|'  # X-axis
+                else:
+                    line += ' '  # Empty space
+            print(line)
 
-        print(' ', end='')  # Print spaces for alignment
-        r += 1
-        if t >= 2:  # End the row after plotting the point and axis (if any)
-            print('')
-            break
-    n += 1  # Increment the graph counter
+    def run_analysis(self) -> None:
+        """
+        Run the full analysis: calculate functions, print table, count positives, and plot graph.
+        """
+        self.calculate_functions()
+        self.print_table()
+        self.count_positive_values()
+        self.print_positive_counts()
+        self.find_s1_min_max()
+        self.plot_graph()
 
-input()  # Pause the program to view the output
+
+def get_user_input() -> Tuple[float, float, float]:
+    """
+    Get initial value, step size, and final value from the user.
+    """
+    initial_z = float(input('Enter the initial value of the variable: '))
+    step_size = float(input('Enter the step size for the variable: '))
+    final_z = float(input('Enter the final value of the variable: '))
+    return initial_z, step_size, final_z
+
+
+def main() -> None:
+    initial_z, step_size, final_z = get_user_input()
+    analyzer = FunctionAnalyzer(initial_z, step_size, final_z)
+    analyzer.run_analysis()
+    input('\nPress Enter to exit...')  # Pause the program to view the output
+
+
+if __name__ == '__main__':
+    main()
